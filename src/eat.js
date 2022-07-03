@@ -139,6 +139,12 @@ function processAuthor(author) {
 }
 
 export default async function eat(filename, options) {
+  // TODO: use same detection alogorith as zk
+  const ZKDir = process.env.ZK_NOTEBOOK_DIR;
+  if (!ZKDir) {
+    console.error(`'ZK_NOTEBOOK_DIR' is not defined`);
+    process.exit(1);
+  }
   // TODO: check if needed config is here
   let stat;
   try {
@@ -172,6 +178,9 @@ export default async function eat(filename, options) {
     citation.issued = meta.issued;
     authors = meta.authors;
     subdir = meta.hostname;
+    if (subdir?.startsWith("www.")) {
+      subdir = subdir.slice(4);
+    }
   } else {
     const meta = await getMetaExiftool(filename);
     if (options.dryRun) {
@@ -223,32 +232,35 @@ export default async function eat(filename, options) {
   const id = createId(citation);
   citation.id = id;
   subdir = await confirm("subdir", subdir, ask);
-  const destAssetDir = path.resolve(config.assetDir, subdir);
-  const destAsset = path.join(destAssetDir, id + titlePart + ext);
+  const destAssetDir = path.join("assets", subdir);
+  const destAsset = id + titlePart + ext;
   console.log("moving ", destAsset);
-  const destNote = path.resolve(config.noteDir, id + titlePart + ".md");
+  const destNote = id + titlePart + ".md";
   console.log("creating ", destNote);
 
   if (!options.dryRun) {
     let rawOut = "---\n";
-    rawOut += yaml.dump({ tags, citation });
+    //  TODO: path relative to process.env.ZK_NOTEBOOK_DIR
+    rawOut += yaml.dump({
+      tags,
+      citation,
+      asset: path.join(destAssetDir, destAsset),
+    });
     rawOut += "---\n";
     rawOut += "\n";
     rawOut += createNoteHeader(citation);
     rawOut += "\n";
 
-    await fs.mkdir(path.dirname(destAsset), { recursive: true });
-    await fs.rename(filename, destAsset);
-    await fs.writeFile(destNote, rawOut);
+    await fs.mkdir(path.resolve(ZKDir, path.resolve(ZKDir, destAssetDir)), {
+      recursive: true,
+    });
+    await fs.rename(filename, path.resolve(ZKDir, destAssetDir, destAsset));
+    await fs.writeFile(path.resolve(ZKDir, config.noteDir, destNote), rawOut);
     if (options.edit) {
       const editor = process.env.VISUAL || process.env.EDITOR;
       if (editor) {
-        spawn(editor, [destNote]);
+        spawn(editor, [path.resolve(ZKDir, config.noteDir, destNote)]);
       }
     }
-
-    // TODO: epub
-    // TODO: sync
-    // TODO: readme
   }
 }
