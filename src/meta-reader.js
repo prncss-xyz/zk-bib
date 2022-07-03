@@ -165,7 +165,7 @@ function getAdapter_(hostname, tree) {
   return res;
 }
 
-function getAdapter(res, tree) {
+export function getAdapter(res, tree) {
   if (res.url) {
     const { hostname } = new URL(res.url);
     res.hostname = hostname;
@@ -211,7 +211,7 @@ function lastName(name) {
   }
 }
 
-async function readTree(filename) {
+export async function readTree(filename) {
   const raw = await readFile(filename, "utf-8");
   const ast = parse(raw);
   const tree = fromParse5(ast);
@@ -238,5 +238,3 @@ export const getMeta = async (filename) => {
   }
   return { meta, tree };
 };
-
-export default { getMeta, readTree, getAdapter };

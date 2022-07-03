@@ -272,7 +272,7 @@ function cleanup(treeIn, coverNode, excludes) {
         const tagName = node.tagName.toLowerCase();
         const properties = {};
         if (node.properties) {
-          for ([key, value] of Object.entries(node.properties)) {
+          for (const [key, value] of Object.entries(node.properties)) {
             properties[key.toLowerCase()] = value;
           }
         }
@@ -302,7 +302,6 @@ function cleanup(treeIn, coverNode, excludes) {
               continue;
             }
             if (encoding === "data:image/svg+xml") {
-              console.log(encoded);
               const nodeOut = fromXML(encoded).children[0];
               nodeOut.attributes.style = node.properties.style;
               svg = true;
@@ -345,7 +344,7 @@ function cleanup(treeIn, coverNode, excludes) {
           const children = [];
           cleanup0(node.children, children);
           const propertiesOut = {};
-          for ([key, value] of Object.entries(properties)) {
+          for (const [key, value] of Object.entries(properties)) {
             if (allowedXhtmlAttributes.includes(key)) {
               propertiesOut[key] = value;
             }
@@ -457,15 +456,13 @@ async function mkEpub(hast, meta, outFile) {
   };
 
   if (!coverSrc) {
-    for ({ name, buffer } of images) {
+    for (const { name, buffer } of images) {
       if (!buffer || buffer.length > 2048) {
         coverSrc = name;
         break;
       }
     }
   }
-
-  for ([key, value] of Object.entries(meta)) console.log(key + ": " + value);
 
   const index = u("root", [
     u("instruction", { name: "xml" }, 'version="1.0" encoding="utf-8"'),
