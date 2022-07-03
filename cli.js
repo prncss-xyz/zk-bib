@@ -3,6 +3,7 @@
 import { program } from "commander";
 import eat from "./src/eat.js";
 import spit from "./src/spit.js";
+import export_ from "./src/export.js";
 
 program
   .command("eat <filename>")
@@ -14,5 +15,7 @@ program
   .action(eat);
 
 program.command("spit <id>").action(spit);
+
+program.command("export").option("-d, --dry-run", "dry-run").action(export_);
 
 program.parseAsync(process.argv);
