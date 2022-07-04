@@ -16,6 +16,5 @@ program
 
 program.command("spit <id>").action(spit);
 
-program.command("export").option("-d, --dry-run", "dry-run").action(export_);
-
+program.command("sync").option("-d, --dry-run", "dry-run").action(export_);
 program.parseAsync(process.argv);

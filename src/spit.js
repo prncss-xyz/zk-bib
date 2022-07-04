@@ -11,7 +11,7 @@ export default async function spit(id, options) {
   try {
     raw = await fs.readFile(filePath, "utf-8");
   } catch (error) {
-    // TODO: rethrow
+    if (error.code !== "ENOENT") throw error;
     console.error(`file ${filePath} do not exist`);
     return 1;
   }

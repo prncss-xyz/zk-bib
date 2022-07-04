@@ -192,7 +192,8 @@ export default async function eat(filename, options) {
     author ??= meta["Creator"];
     citation.title ??= meta["Title"];
     citation.title ??= meta["Title_sort"];
-    citation.issued = processEXIFToolDate(meta["CreateDate"]);
+    citation.issued =
+      meta["CreateDate"] && processEXIFToolDate(meta["CreateDate"]);
     citation.pages = meta["PageCount"];
     citation.language = meta["Language"];
     citation.publisher = meta["Publisher"];

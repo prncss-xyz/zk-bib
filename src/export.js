@@ -60,8 +60,8 @@ export default async function export_(options) {
                   sdrPath(from),
                   sdrPath(path.join(to_, filename))
                 );
-              } catch (e) {
-                // TODO: rethrow
+              } catch (err) {
+                if (err.code !== 'ENOENT') throw err;
               }
             }
           }
