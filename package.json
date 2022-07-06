@@ -32,6 +32,7 @@
     "nanoid": "^3.3.4",
     "parse-full-name": "^1.2.6",
     "parse5": "^6.0.1",
+    "remove-accents": "^0.4.2",
     "unist-builder": "^2.0.3",
     "unist-util-visit": "^2.0.3",
     "xast-util-from-xml": "^1.0.1",

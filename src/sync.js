@@ -2,7 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import config from "./utils/config.js";
-import { zk, mk, sdrPath } from "./utils.js";
+import { zk, sdrPath } from "./utils/index.js";
+import { mk } from "./meta-reader/index.js";
 
 export default async function sync(options) {
   const plan = {};

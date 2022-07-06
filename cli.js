@@ -3,7 +3,7 @@
 import { program } from "commander";
 import eat from "./src/eat.js";
 import spit from "./src/spit.js";
-import sync from "./src/export.js";
+import sync from "./src/sync.js";
 
 program
   .command("eat <filename>")

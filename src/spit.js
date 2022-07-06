@@ -1,8 +1,8 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import matter from "gray-matter";
-import config from "./config.js";
-import { mk } from "./utils.js";
+import config from "./utils/config.js";
+import { mk } from "./meta-reader/index.js";
 
 export default async function spit(id, options) {
   const ZKDir = process.env.ZK_NOTEBOOK_DIR;

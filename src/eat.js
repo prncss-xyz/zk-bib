@@ -6,10 +6,11 @@ import yaml from "js-yaml";
 import { parseFullName } from "parse-full-name";
 
 import { customAlphabet } from "nanoid";
+import accents from "remove-accents";
 
-import { processEXIFToolDate } from "./utils.js";
-import config from "./config.js";
-import { getMeta } from "./meta-reader.js";
+import { processEXIFToolDate } from "./utils/index.js";
+import config from "./utils/config.js";
+import { getMeta } from "./meta-reader/index.js";
 
 const idLength = 5;
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz", idLength);
@@ -228,6 +229,7 @@ export default async function eat(filename, options) {
   } else if (citation.title) {
     titlePart = citation.title;
   }
+  titlePart = accents.remove(titlePart);
   titlePart = await confirm("title part", titlePart, ask);
   if (titlePart !== "") titlePart = " " + titlePart;
   const id = createId(citation);

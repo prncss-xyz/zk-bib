@@ -1,4 +1,4 @@
-import { attribute, pipe, toText } from "./meta-reader/helpers.js";
+import { attribute, pipe, toText } from "./helpers.js";
 
 // TODO: use thumbPath
 // TODO: separate files for specific adapters

@@ -3,7 +3,7 @@ import path from "node:path";
 import yaml from "js-yaml";
 import { xdgConfig } from "xdg-basedir";
 
-const name = "read-meta";
+const name = "zk-bib";
 
 async function getConf() {
   let config;
