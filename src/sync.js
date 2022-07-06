@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
-import config from "./config.js";
+import config from "./utils/config.js";
 import { zk, mk, sdrPath } from "./utils.js";
 
-export default async function export_(options) {
+export default async function sync(options) {
   const plan = {};
   const promFrom = Object.entries(config.export).map(async ([_, dir]) => {
     dir = path.resolve(process.env.HOME, dir);
