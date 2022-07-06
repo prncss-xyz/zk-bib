@@ -10,7 +10,7 @@ export function processEXIFToolDate(str) {
 
 export function sdrPath(filePath) {
   const ext = path.extname(filePath);
-  return filePath.slice(0, -ext.length) + '.sdr';
+  return filePath.slice(0, -ext.length) + ".sdr";
 }
 
 export function zk(args) {
@@ -39,4 +39,29 @@ export function zk(args) {
       }
     });
   });
+}
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+export function remove(title, opts) {
+  opts = opts || {};
+  let words = opts.words || [];
+  words = words.concat(words.map(capitalizeFirstLetter));
+  let prefixes = opts.prefixes || [];
+  prefixes = prefixes.concat(prefixes.map(capitalizeFirstLetter));
+  return title
+    .replaceAll(/\s+/g, " ")
+    .split(" ")
+    .filter((word) => !words.includes(word))
+    .map((word) => {
+      for (const pre of prefixes) {
+        if (word.startsWith(pre)) {
+          return word.slice(pre.length);
+        }
+      }
+      return word;
+    })
+    .join(" ");
 }

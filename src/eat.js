@@ -230,6 +230,7 @@ export default async function eat(filename, options) {
     titlePart = citation.title;
   }
   titlePart = accents.remove(titlePart);
+  titlePart = remove(titlePart, config.removeTitle);
   titlePart = await confirm("title part", titlePart, ask);
   if (titlePart !== "") titlePart = " " + titlePart;
   const id = createId(citation);
