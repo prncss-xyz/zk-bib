@@ -61,13 +61,20 @@ export default async function sync(options) {
                   sdrPath(path.join(to_, filename))
                 );
               } catch (err) {
-                if (err.code !== 'ENOENT') throw err;
+                if (err.code !== "ENOENT") throw err;
               }
             }
           }
         } else if (from) {
           if (options.dryRun) console.log("rm", from);
-          else await fs.rm(from);
+          else {
+            await fs.rm(from);
+            try {
+              await fs.rm(sdrPath(from));
+            } catch (err) {
+              if (err.code !== "ENOENT") throw err;
+            }
+          }
         } else if (to_) {
           if (options.dryRun) console.log("mk", path.join(to_, filename));
           else await mk(data, to_);
