@@ -1,4 +1,4 @@
-import { processEXIFToolDate, sdrPath, remove } from "./index.js";
+import { processEXIFToolDate, sdrPath, removeWords } from "./index.js";
 
 test("properly format date", () => {
   expect(processEXIFToolDate("2021:12:13 14:35:31-05:00")).toBe(
@@ -11,10 +11,10 @@ test("properly create sdr name", () => {
 });
 
 test("remove unwanted words from title", () => {
-  expect(remove("The  green a tomatoe", { words: ["the", "a"] })).toBe(
+  expect(removeWords("The  green a tomatoe", { words: ["the", "a"] })).toBe(
     "green tomatoe"
   );
-  expect(remove("D'amour et d'eau fraîche", { prefixes: ["d'"] })).toBe(
+  expect(removeWords("D'amour et d'eau fraîche", { prefixes: ["d'"] })).toBe(
     "amour et eau fraîche"
   );
 });

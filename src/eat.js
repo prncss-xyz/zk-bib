@@ -8,7 +8,10 @@ import { parseFullName } from "parse-full-name";
 import { customAlphabet } from "nanoid";
 import accents from "remove-accents";
 
-import { processEXIFToolDate } from "./utils/index.js";
+import {
+  processEXIFToolDate,
+  removeTitleParts,
+} from "./utils/index.js";
 import config from "./utils/config.js";
 import { getMeta } from "./meta-reader/index.js";
 
@@ -230,7 +233,7 @@ export default async function eat(filename, options) {
     titlePart = citation.title;
   }
   titlePart = accents.remove(titlePart);
-  titlePart = remove(titlePart, config.removeTitle);
+  titlePart = removeTitleParts(titlePart, config.removeTitle);
   titlePart = await confirm("title part", titlePart, ask);
   if (titlePart !== "") titlePart = " " + titlePart;
   const id = createId(citation);

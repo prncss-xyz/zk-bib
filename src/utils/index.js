@@ -45,13 +45,12 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function remove(title, opts) {
-  opts = opts || {};
-  let words = opts.words || [];
+export function removeTitleParts(title, opts) {
+  let words = opts?.words || [];
   words = words.concat(words.map(capitalizeFirstLetter));
-  let prefixes = opts.prefixes || [];
+  let prefixes = opts?.prefixes || [];
   prefixes = prefixes.concat(prefixes.map(capitalizeFirstLetter));
-  return title
+  title = title
     .replaceAll(/\s+/g, " ")
     .split(" ")
     .filter((word) => !words.includes(word))
@@ -64,4 +63,10 @@ export function remove(title, opts) {
       return word;
     })
     .join(" ");
+  const chars = opts?.chararacters || "";
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars.charAt(i);
+    title.replaceAll(char, "");
+  }
+  return title;
 }
