@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import accents from "remove-accents";
 import path from "node:path";
 
 export function processEXIFToolDate(str) {
@@ -46,9 +47,10 @@ function capitalizeFirstLetter(string) {
 }
 
 export function removeTitleParts(title, opts) {
-  let words = opts?.words || [];
+  opts = opts ?? {}
+  let words = opts.words ?? [];
   words = words.concat(words.map(capitalizeFirstLetter));
-  let prefixes = opts?.prefixes || [];
+  let prefixes = opts.prefixes ?? [];
   prefixes = prefixes.concat(prefixes.map(capitalizeFirstLetter));
   title = title
     .replaceAll(/\s+/g, " ")
@@ -63,10 +65,13 @@ export function removeTitleParts(title, opts) {
       return word;
     })
     .join(" ");
-  const chars = opts?.chararacters || "";
+  const chars = opts.chararacters ?? "";
   for (let i = 0; i < chars.length; i++) {
     const char = chars.charAt(i);
     title.replaceAll(char, "");
+  }
+  if (opts.accents) {
+    titlePart = accents.remove(titlePart);
   }
   return title;
 }

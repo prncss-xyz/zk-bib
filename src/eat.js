@@ -7,7 +7,6 @@ import yaml from "js-yaml";
 import { parseFullName } from "parse-full-name";
 
 import { customAlphabet } from "nanoid";
-import accents from "remove-accents";
 
 import { processEXIFToolDate, removeTitleParts } from "./utils/index.js";
 import { EPUBreadMeta } from "./utils/epub-meta.js";
@@ -212,13 +211,13 @@ export default async function eat(filename, options) {
   }
   citation.issued ??= stat.ctime;
   let tags = [];
-  tags = tags.concat(config.baseTags || [], options.tags || []);
+  tags = tags.concat(config.tags ?? [], options.tags ?? []);
   tags.sort();
   citation.title ??= path.basename(filename, ext);
   if (ext === ".epub") citation.type ??= "book";
-  const ask = !(options.yes || options.dryRun);
+  const ask = !(options.yes ?? options.dryRun);
   authors ??= [];
-  authors[0] = await confirm("author", authors?.[0] || "unknown", ask);
+  authors[0] = await confirm("author", authors?.[0] ?? "unknown", ask);
   citation.authors = authors?.map(processAuthor);
   let issued;
   if (citation.issued instanceof Date) issued = citation.issued?.toISOString();
@@ -238,7 +237,6 @@ export default async function eat(filename, options) {
   } else if (citation.title) {
     titlePart = citation.title;
   }
-  titlePart = accents.remove(titlePart);
   titlePart = removeTitleParts(titlePart, config.removeTitle);
   titlePart = await confirm("title part", titlePart, ask);
   if (titlePart !== "") titlePart = " " + titlePart;
