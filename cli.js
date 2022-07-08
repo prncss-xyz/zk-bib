@@ -4,6 +4,7 @@ import { program } from "commander";
 import eat from "./src/eat.js";
 import spit from "./src/spit.js";
 import sync from "./src/sync.js";
+import asset from "./src/asset.js";
 
 program
   .command("eat <filename>")
@@ -15,6 +16,9 @@ program
   .action(eat);
 
 program.command("spit <id>").action(spit);
+
+program.command("asset <id>")
+  .action(asset)
 
 program.command("sync").option("-d, --dry-run", "dry-run").action(sync);
 program.parseAsync(process.argv);

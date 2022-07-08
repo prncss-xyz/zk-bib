@@ -2,7 +2,6 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import readline from "node:readline";
-import { promisify } from "node:util";
 import yaml from "js-yaml";
 import { parseFullName } from "parse-full-name";
 
