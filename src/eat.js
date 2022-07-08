@@ -2,16 +2,15 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import readline from "node:readline";
+import { promisify } from "node:util";
 import yaml from "js-yaml";
 import { parseFullName } from "parse-full-name";
 
 import { customAlphabet } from "nanoid";
 import accents from "remove-accents";
 
-import {
-  processEXIFToolDate,
-  removeTitleParts,
-} from "./utils/index.js";
+import { processEXIFToolDate, removeTitleParts } from "./utils/index.js";
+import { EPUBreadMeta } from "./utils/epub-meta.js";
 import config from "./utils/config.js";
 import { getMeta } from "./meta-reader/index.js";
 
@@ -169,7 +168,7 @@ export default async function eat(filename, options) {
   // trying to have te citation object close of what is defined at:
   // https://docs.citationstyles.org/en/stable/specification.html
   let authors = [];
-  let subdir;
+  let subdir = ext.slice(1);
   if (ext === ".html" || ext === ".htm") {
     const res = await getMeta(filename);
     const meta = res.meta;
@@ -181,9 +180,17 @@ export default async function eat(filename, options) {
     citation.language = meta.lang;
     citation.issued = meta.issued;
     authors = meta.authors;
-    subdir = meta.hostname;
-    if (subdir?.startsWith("www.")) {
-      subdir = subdir.slice(4);
+    if (meta.hostname) {
+      subdir = meta.hostname;
+      if (subdir?.startsWith("www.")) {
+        subdir = subdir.slice(4);
+      }
+    }
+  } else if (ext === ".epub") {
+    citation = await EPUBreadMeta(filename);
+    authors = citation.authors;
+    if (options.dryRun) {
+      console.log(citation);
     }
   } else {
     const meta = await getMetaExiftool(filename);
@@ -202,7 +209,6 @@ export default async function eat(filename, options) {
     citation.language = meta["Language"];
     citation.publisher = meta["Publisher"];
     authors = [author];
-    subdir = ext.slice(1);
   }
   citation.issued ??= stat.ctime;
   let tags = [];

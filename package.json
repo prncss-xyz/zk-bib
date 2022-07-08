@@ -35,6 +35,7 @@
     "remove-accents": "^0.4.2",
     "unist-builder": "^2.0.3",
     "unist-util-visit": "^2.0.3",
+    "unzipper": "^0.10.11",
     "xast-util-from-xml": "^1.0.1",
     "xast-util-to-xml": "^2.0.1",
     "xastscript": "^2.1.1",
