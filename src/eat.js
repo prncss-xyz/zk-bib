@@ -41,24 +41,35 @@ function createNoteHeader(citation) {
 }
 
 function open(filename) {
-  let stderr = "";
   const proc = spawn("xdg-open", [filename]);
-
-  proc.stderr.on("data", (data) => {
-    stderr += data;
-  });
-
-  proc.on("close", (code) => {
-    if (code !== 0) {
-      throw {
-        code: "ERR_EXIF",
-        no: code,
-        message: stderr,
-      };
-    }
-  });
-
   proc.unref();
+}
+
+function edit_blocking(filename) {
+  let stdout = "";
+  return new Promise((resolve, reject) => {
+    const ls = spawn(process.env.EDITOR, [filename]);
+    ls.on("close", (code) => {
+      if (code === 0) {
+        resolve(stdout);
+      } else {
+        reject({
+          code: "ERR",
+          no: code,
+        });
+      }
+    });
+  });
+}
+
+async function edit(filename) {
+  if (process.env.VISUAL) {
+    const proc = spawn(process.env.VISUAL, [filename]);
+    // FIX: not quitting
+    proc.unref();
+  } else if (process.env.EDITOR) {
+    await edit_blocking(filename);
+  }
 }
 
 function getMetaExiftool(filename) {
@@ -166,7 +177,6 @@ export default async function eat(filename, options) {
   // trying to have te citation object close of what is defined at:
   // https://docs.citationstyles.org/en/stable/specification.html
   let authors = [];
-  let subdir = ext.slice(1);
   if (ext === ".html" || ext === ".htm") {
     const res = await getMeta(filename);
     const meta = res.meta;
@@ -178,12 +188,6 @@ export default async function eat(filename, options) {
     citation.language = meta.lang;
     citation.issued = meta.issued;
     authors = meta.authors;
-    if (meta.hostname) {
-      subdir = meta.hostname;
-      if (subdir?.startsWith("www.")) {
-        subdir = subdir.slice(4);
-      }
-    }
   } else if (ext === ".epub") {
     citation = await EPUBreadMeta(filename);
     authors = citation.authors;
@@ -241,8 +245,7 @@ export default async function eat(filename, options) {
   if (titlePart !== "") titlePart = " " + titlePart;
   const id = createId(citation);
   citation.id = id;
-  subdir = await confirm("subdir", subdir, ask);
-  const destAssetDir = path.join("assets", subdir);
+  const destAssetDir = "assets";
   const destAsset = id + titlePart + ext;
   console.log("moving ", destAsset);
   const destNote = id + titlePart + ".md";
@@ -267,10 +270,7 @@ export default async function eat(filename, options) {
     await fs.rename(filename, path.resolve(ZKDir, destAssetDir, destAsset));
     await fs.writeFile(path.resolve(ZKDir, config.noteDir, destNote), rawOut);
     if (options.edit) {
-      const editor = process.env.VISUAL || process.env.EDITOR;
-      if (editor) {
-        spawn(editor, [path.resolve(ZKDir, config.noteDir, destNote)]);
-      }
+      await edit(path.resolve(ZKDir, config.noteDir, destNote));
     }
   }
 }

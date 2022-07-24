@@ -31,16 +31,21 @@ export default async function sync(options) {
       ]);
       for (const filePath of res.split("\n")) {
         if (filePath === "") continue;
-        const raw = await fs.readFile(filePath, "utf-8");
-        const data = matter(raw).data;
-        let dest = data.asset;
-        const ext = path.extname(dest);
-        if (ext === ".html" || ext === ".ext") {
-          dest = path.basename(dest, ext) + ".epub";
-        } else dest = path.basename(dest);
-        plan[dest] ??= {};
-        plan[dest].to_ = path.resolve(process.env.HOME, dir);
-        plan[dest].data = data;
+        try {
+          const raw = await fs.readFile(filePath, "utf-8");
+          const data = matter(raw).data;
+          let dest = data.asset;
+          const ext = path.extname(dest);
+          if (ext === ".html" || ext === ".ext") {
+            dest = path.basename(dest, ext) + ".epub";
+          } else dest = path.basename(dest);
+          plan[dest] ??= {};
+          plan[dest].to_ = path.resolve(process.env.HOME, dir);
+          plan[dest].data = data;
+        } catch (err) {
+          if (error.code !== "ENOENT") throw error;
+          console.error(`file ${filePath} not available`)
+        }
       }
     }
   });

@@ -1,6 +1,7 @@
 import { readFile, stat as _stat } from "node:fs/promises";
 import mkEpub from "./mk-epub.js";
 import fs from "node:fs/promises";
+import path from "node:path";
 
 import { select, selectAll } from "hast-util-select";
 import { parse } from "parse5";

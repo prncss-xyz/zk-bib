@@ -11,7 +11,6 @@ function streamToString(filename) {
       .pipe(unzipper.Parse())
       .on("entry", function (entry) {
         const filename_ = entry.path;
-        // console.log(filename_);
         if (first && filename_.endsWith(".opf")) {
           first = false;
           entry.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
@@ -19,7 +18,6 @@ function streamToString(filename) {
           entry.on("end", () =>
             resolve(Buffer.concat(chunks).toString("utf8"))
           );
-          // entry.pipe(fs.createWriteStream("output/path"));
         } else {
           entry.autodrain();
         }
