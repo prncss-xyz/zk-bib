@@ -179,15 +179,11 @@ export default async function eat(filename, options) {
   let authors = [];
   if (ext === ".html" || ext === ".htm") {
     const res = await getMeta(filename);
-    const meta = res.meta;
+    citation = res.meta.citation;
     if (options.dryRun) {
-      console.log(meta);
+      console.log(res.meta);
     }
-    citation.URL = meta.url;
-    citation.title = meta.title;
-    citation.language = meta.lang;
-    citation.issued = meta.issued;
-    authors = meta.authors;
+    authors = citation.authors;
   } else if (ext === ".epub") {
     citation = await EPUBreadMeta(filename);
     authors = citation.authors;

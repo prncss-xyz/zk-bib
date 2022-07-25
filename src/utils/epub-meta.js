@@ -37,7 +37,7 @@ export async function EPUBreadMeta(filename) {
         if (child.name === "dc:date") {
           meta.issued = value(child);
         } else if (child.name === "dc:title") {
-          meta.tile = value(child);
+          meta.title = value(child);
         } else if (child.name === "dc:language") {
           meta.language = value(child);
         } else if (child.name === "dc:publisher") {

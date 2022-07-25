@@ -1,7 +1,5 @@
 import toText_ from 'hast-util-to-text';
 
-export const attribute = name => tree => tree.properties && tree.properties[name];
-
 export const toText = node => toText_(node)?.trim()
 
 export const pipe = (...fns) => function(arg) {

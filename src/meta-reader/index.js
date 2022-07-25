@@ -2,216 +2,171 @@ import { readFile, stat as _stat } from "node:fs/promises";
 import mkEpub from "./mk-epub.js";
 import fs from "node:fs/promises";
 import path from "node:path";
+import visit from "unist-util-visit";
 
-import { select, selectAll } from "hast-util-select";
 import { parse } from "parse5";
 import fromParse5 from "hast-util-from-parse5";
 
 import config from "../utils/config.js";
-import { attribute, toText } from "./helpers.js";
-import { specifics, generic, site } from "./adapters.js";
+import { getAdapter } from "./adapters.js";
+import { toText } from "./helpers.js";
 
 const { pluralFields, tags: _tags } = config;
-const testDomain = (hostname, domain) => hostname?.endsWith(domain);
 
-const defaultValue = (tree) => {
-  let res;
-  res = attribute("content")(tree);
-  if (res) return res;
-  res = attribute("content")(tree);
-  if (res) return res;
-  res = toText(tree);
-  if (res) return res;
-};
-
-// key must be lowercase
-const findMeta = (meta, value, head) => {
-  meta = meta.toLowerCase();
-  for (const element of head?.children) {
-    if (!element.properties) continue;
-    if (element.tagName?.toLowerCase === "meta") continue;
-    let key0 = element.properties.name || element.properties.property || "";
-    key0 = key0.toLowerCase();
-    if (key0 === meta) {
-      let res = element.properties.content;
-      if (value) res = value(res);
-      return res;
-    }
+function register(res, priority, field, value) {
+  if (!value) return;
+  if (field === "authors" && (value.includes("@") || value.includes("://"))) {
+    return;
   }
-};
-
-function find(query, value, tree) {
-  let res;
-  res = select(query, tree);
-  if (res) return value(res);
+  res[field] ??= {};
+  if (typeof res[field].priority === "number" && res[field].priority > priority) {
+    return;
+  }
+  if (pluralFields.includes(field)) {
+    res[field].priority = priority;
+    res[field].value ??= [];
+    res[field].value.push(value);
+    return;
+  }
+  if (res[field].priority === priority) return;
+  res[field].priority = priority;
+  res[field].value = value;
 }
 
-function findAll(query, value, tree) {
-  let res = selectAll(query, tree);
-  if (!res) return;
-  let ret = [];
-  for (const e of res) {
-    const val = value(e);
-    if (val) {
-      ret = ret.concat(val);
-    }
-  }
-  if (ret.length > 0) {
-    return ret;
-  }
-}
-
-function getPath(table, strPath) {
-  const keys = strPath.split(".");
-  const last = keys.pop();
-  for (let key of keys) {
-    table[key] ??= {};
-    table = table[key];
-  }
-  return table[last];
-}
-
-function adjust(table, strPath, value) {
-  const keys = strPath.split(".");
-  const last = keys.pop();
-  for (let key of keys) {
-    table[key] ??= {};
-    table = table[key];
-  }
-  table[last] = value;
-}
-
-function queries(res, queries, tree, headTree) {
-  if (!queries) return;
-  for (let {
+const rules = {};
+let rules_counter;
+function registerRule(key, field) {
+  key = key.toLowerCase();
+  rules[key] = {
+    priority: rules_counter++,
     field,
-    query,
-    head,
-    meta,
-    value,
-    constant,
-    hostname,
-    plural,
-  } of queries) {
-    const val = getPath(res, field);
-    if (val) continue;
-    if (hostname) {
-      if (!testDomain(res.hostname, hostname)) continue;
-    }
-    if (constant) {
-      if (typeof constant === "function") adjust(res, field, constant(res));
-      else adjust(res, field, constant);
-      if (val && pluralFields.includes(field) && typeof val != "object") {
-        console.warn(`Field ${field} expects an array, got ${val}`);
-      }
-      continue;
-    }
-    if (meta) {
-      adjust(res, field, findMeta(meta, value, headTree));
-      continue;
-    }
-    let q, t;
-    if (query) {
-      q = query;
-      t = tree;
-    }
-    if (head) {
-      q = head;
-      t = headTree;
-    }
-    if (q) {
-      value = value ?? defaultValue;
-      if (plural || pluralFields.includes(field)) {
-        const r = findAll(q, value, t);
-        if (r || r === 0) {
-          adjust(res, field, r);
-        }
-      } else {
-        const r = find(q, value, t);
-        if (r || r === 0) {
-          adjust(res, field, r);
-        }
-      }
-    }
-  }
+  };
+}
+function applyRules(reg, node) {
+  let key = node.properties.name ?? node.properties.property;
+  key = key?.toLowerCase();
+  const content = node.properties.content;
+  const rule = rules[key];
+  if (!rule) return;
+  register(reg, rule.priority, rule.field, content);
 }
 
-function getAdapter_(hostname, tree) {
-  let specific;
-  if (hostname) {
-    for (const q of specifics) {
-      if (q.pattern && hostname.endsWith(q.pattern)) {
-        specific = q;
-        break;
-      }
-    }
-  }
-  if (!specific) {
-    for (const q of specifics) {
-      const t = q.test;
-      if (t) {
-        const value = t.value || (() => true);
-        if (find(t.query, value, tree)) {
-          specific = q;
-          break;
-        }
-      }
-    }
-  }
-  const res = { ...generic };
-  if (!specific) return res;
-  for (const [k, v] of Object.entries(specific)) {
-    res[k] = v;
-  }
-  res.queries = res.queries || [];
-  res.queries = res.queries.concat(generic.queries);
-  return res;
+function ld_graph(obj) {
+  if (obj["@graph"]) return obj["@graph"][0];
+  return obj;
 }
 
-export function getAdapter(res, tree) {
-  if (res.url) {
-    const { hostname } = new URL(res.url);
-    res.hostname = hostname;
+function merge(target, source) {
+  for (const [k, v] of Object.entries(source || {})) {
+    target[k] = v;
   }
-  site?.post(res);
-  // hostname might be modified by post()
-  return getAdapter_(res.hostname, tree);
 }
 
 function readMeta(tree) {
-  const head = select("head", tree);
-  const res = {};
+  const reg = {};
+  visit(tree, (node) => {
+    if (node.tagName === "h1") {
+      register(reg, 0, "title", toText(node));
+    } else if (node.tagName === "meta") {
+      applyRules(reg, node);
+    } else if (
+      node.tagName === "link" &&
+      node.properties?.rel === "canonical"
+    ) {
+      register(reg, 1, "URL", node.properties?.href);
+    } else if (node.tagName === "base") {
+      register(reg, 2, "URL", toText(node));
+    } else if (node.tagName === "title") {
+      register(reg, 3, "title", toText(node));
+    } else if (
+      node.tagName === "script" &&
+      node.properties?.type === "application/ld+json"
+    ) {
+      const raw = toText(node);
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (err) {}
+      if (parsed) {
+        const graph = ld_graph(JSON.parse(toText(node)));
+        register(reg, rules_counter, "URL", graph.url);
+        register(reg, rules_counter, "authors", graph.author?.name);
+        register(reg, rules_counter, "issued", graph.datePublished);
+        register(reg, rules_counter, "modified", graph.dateModified);
+      }
+    }
+  });
 
-  queries(res, site.queries, tree, head);
-  const adapter = getAdapter(res, tree);
-
-  queries(res, adapter.queries, tree, head);
-  adapter?.post?.(res, tree);
-  generic.post?.(res, tree);
-  for (const { pattern, tags } of _tags) {
-    if (res.hostname?.endsWith(pattern)) {
-      res.tags = tags;
-      break;
+  const citation = {};
+  for (const [field, { value }] of Object.entries(reg)) {
+    citation[field] = value;
+  }
+  if (citation.URL) {
+    let { hostname } = new URL(citation.URL);
+    const ndx0 = hostname?.indexOf(".lib-ezproxy");
+    if (ndx0 > -1) {
+      hostname = citation.hostname.slice(0, ndx0);
+      hostname = hostname.replace(/-/gu, ".");
+      const URL = new URL(citation.URL);
+      citation.URL = URL.toString();
+    }
+    if (hostname.startsWith("www.")) hostname = hostname.slice(4);
+    if (!citation.language && hostname[3] === ".") {
+      citation.language = hostname.slice(0, 2);
     }
   }
-  return res;
+  citation.language ??= "en";
+  const adapter = getAdapter(citation.URL);
+  merge(citation, adapter.meta);
+  if (citation.title && adapter.titleSplit) {
+    const ndx = citation.title.lastIndexOf(citation.titleSplit);
+    if (ndx !== -1) {
+      citation.title = citation.title.slice(1, ndx).trim();
+    }
+  }
+  citation.issued = citation.issued ?? citation.modified;
+  return {
+    citation,
+    thumbPath: adapter?.thumbPath,
+    includes: adapter?.includes,
+    excludes: adapter?.excludes,
+  };
 }
 
-const postTitles = ["phd", "jr", "sr"];
-function lastName(name) {
-  let strs = name.split(",");
-  if (strs.length === 2) {
-    return strs[0];
-  }
-  strs = name.split(" ");
-  for (let i = strs.length - 1; i >= 0; --i) {
-    let w = strs[i];
-    w = w.toLowerCase();
-    w = w.replace(/\./g, "");
-    if (!postTitles.includes(w)) {
-      return strs[i];
-    }
-  }
+rules_counter = 4;
+registerRule("article:published_time", "issued");
+registerRule("article:author", "authors");
+registerRule("citation_year", "issued");
+registerRule("citation_publication_date", "issued");
+registerRule("citation_title", "title");
+registerRule("citation_author", "authors");
+registerRule("twitter:data1", "authors");
+registerRule("twitter:creator", "authors");
+registerRule("author", "authors");
+registerRule("authors", "authors");
+registerRule("dc:language", "language");
+registerRule("dc:publisher", "publisher");
+registerRule("dc:creator", "authors");
+registerRule("dc:description", "description");
+registerRule("dc:date", "issued");
+registerRule("dc.date.created", "issued");
+registerRule("dcterms.issued", "issued");
+registerRule("dcterms.modified", "modified");
+registerRule("dc.date.modified", "modified");
+registerRule("og:title", "title");
+registerRule("og:url", "URL");
+registerRule("og:type", "type");
+registerRule("og:author", "authors");
+for (const field of [
+  "title",
+  "firstpage",
+  "lastpage",
+  "doi",
+  "journal_title",
+  "journal_abbrev",
+]) {
+  registerRule("og:" + field, field);
+  registerRule("citation_" + field, field);
 }
 
 export async function readTree(filename) {
@@ -221,7 +176,7 @@ export async function readTree(filename) {
   return tree;
 }
 
-export const getMeta = async (filename) => {
+export async function getMeta(filename) {
   let stat;
   try {
     stat = await _stat(filename);
@@ -240,7 +195,7 @@ export const getMeta = async (filename) => {
     }
   }
   return { meta, tree };
-};
+}
 
 export async function mk(data, destDir) {
   const ZKDir = process.env.ZK_NOTEBOOK_DIR;
@@ -262,10 +217,10 @@ export async function mk(data, destDir) {
     };
     const source = path.resolve(ZKDir, data.asset);
     const tree = await readTree(source);
-    //TODO: can we get adapter only with url?
-    const adapter = getAdapter(meta, tree);
+    const adapter = getAdapter(data.citation.URL);
     meta.includes = adapter.includes;
     meta.excludes = adapter.excludes;
+    meta.thumbPath = adapter.thumbPath;
     // TODO: have includes and excludes as independant parameters
     dest = path.resolve(destDir, dest);
     console.log("creating " + dest);
