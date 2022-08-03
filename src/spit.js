@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import matter from "gray-matter";
 import config from "./utils/config.js";
-import { mk } from "./meta-reader/index.js";
+import { mkEpub } from "./meta-reader/index.js";
 
 export default async function spit(id, options) {
   const ZKDir = process.env.ZK_NOTEBOOK_DIR;
@@ -19,5 +19,5 @@ export default async function spit(id, options) {
   if (!data.asset) {
     console.error(`file ${filePath} do not have linked asset`);
   }
-  await mk(data, ".");
+  await mkEpub(data, ".");
 }

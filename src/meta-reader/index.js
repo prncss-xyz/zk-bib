@@ -1,5 +1,5 @@
 import { readFile, stat as _stat } from "node:fs/promises";
-import mkEpub from "./mk-epub.js";
+import mkEpubRaw from "./mk-epub-raw.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import visit from "unist-util-visit";
@@ -10,6 +10,7 @@ import fromParse5 from "hast-util-from-parse5";
 import config from "../utils/config.js";
 import { getAdapter } from "./adapters.js";
 import { toText } from "./helpers.js";
+import { authorsToString } from "../utils/index.js";
 
 const { pluralFields, tags: _tags } = config;
 
@@ -19,7 +20,10 @@ function register(res, priority, field, value) {
     return;
   }
   res[field] ??= {};
-  if (typeof res[field].priority === "number" && res[field].priority > priority) {
+  if (
+    typeof res[field].priority === "number" &&
+    res[field].priority > priority
+  ) {
     return;
   }
   if (pluralFields.includes(field)) {
@@ -169,8 +173,7 @@ for (const field of [
   registerRule("citation_" + field, field);
 }
 
-export async function readTree(filename) {
-  const raw = await readFile(filename, "utf-8");
+export async function parseTree(raw) {
   const ast = parse(raw);
   const tree = fromParse5(ast);
   return tree;
@@ -185,7 +188,8 @@ export async function getMeta(filename) {
     console.error(`File ${filename} not found.`);
     return null;
   }
-  const tree = await readTree(filename);
+  const raw = await readFile(filename, "utf-8");
+  const tree = parseTree(raw);
   const meta = readMeta(tree);
 
   meta.issued ??= stat.mtime.toISOString();
@@ -197,7 +201,7 @@ export async function getMeta(filename) {
   return { meta, tree };
 }
 
-export async function mk(data, destDir) {
+export async function mkEpub(data, destDir) {
   const ZKDir = process.env.ZK_NOTEBOOK_DIR;
   let dest = path.basename(data.asset);
   const ext = path.extname(data.asset);
@@ -213,10 +217,11 @@ export async function mk(data, destDir) {
     }
     let meta = {
       ...data.citation,
-      authors,
+      authors: authorsToString(data.citation.authors),
     };
     const source = path.resolve(ZKDir, data.asset);
-    const tree = await readTree(source);
+    const raw = await readFile(source, "utf-8");
+    const tree = parseTree(raw);
     const adapter = getAdapter(data.citation.URL);
     meta.includes = adapter.includes;
     meta.excludes = adapter.excludes;
@@ -224,7 +229,7 @@ export async function mk(data, destDir) {
     // TODO: have includes and excludes as independant parameters
     dest = path.resolve(destDir, dest);
     console.log("creating " + dest);
-    await mkEpub(tree, data, dest);
+    await mkEpubRaw(tree, meta, dest);
   } else {
     dest = path.resolve(destDir, dest);
     console.log("creating " + dest);

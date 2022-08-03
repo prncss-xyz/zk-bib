@@ -3,7 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import config from "./utils/config.js";
 import { zk, sdrPath } from "./utils/index.js";
-import { mk } from "./meta-reader/index.js";
+import { mkEpub } from "./meta-reader/index.js";
 
 export default async function sync(options) {
   const plan = {};
@@ -83,7 +83,7 @@ export default async function sync(options) {
           }
         } else if (to_) {
           if (options.dryRun) console.log("mk", path.join(to_, filename));
-          else await mk(data, to_);
+          else await mkEpub(data, to_);
         } else {
           assert(false);
         }

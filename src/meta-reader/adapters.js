@@ -162,11 +162,18 @@ const override = [
   },
 ];
 
-export function getAdapter(url) {
-  if (!url) return {};
-  const { hostname } = new URL(url);
-  const specific =
-    override.find((value) => hostname?.endsWith(value.pattern)) || {};
-  // TODO: deep merge conf
-  return specific;
+export function getAdapter(urlOrKey) {
+  if (!urlOrKey) return {};
+  let hostname;
+  try {
+    const url = new URL(url);
+    hostname = url.hostname;
+  } catch (err) {}
+  if (hostname) {
+    const specific =
+      override.find((value) => hostname?.endsWith(value.pattern)) || {};
+    // TODO: deep merge conf
+    return specific;
+  }
+  return override.find((value) => value === urlOrKey) || {};
 }

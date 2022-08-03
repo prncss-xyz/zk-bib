@@ -63,7 +63,7 @@ function edit_blocking(filename) {
 }
 
 async function edit(filename) {
-  if (process.env.VISUAL) {
+  if (false && process.env.VISUAL) {
     const proc = spawn(process.env.VISUAL, [filename]);
     // FIX: not quitting
     proc.unref();

@@ -2,6 +2,31 @@ import { spawn } from "node:child_process";
 import accents from "remove-accents";
 import path from "node:path";
 
+export function argsSub(args, arg) {
+  const res = [...args];
+  const index = args.indexOf("{}");
+  if (index === -1) {
+    res.push(arg);
+  } else {
+    res.splice(index, 1, arg);
+  }
+  return res;
+}
+
+function authorToString(author) {
+  if (typeof author === "object") {
+    return author.given ? author.family + ", " + author.given : author.family;
+  }
+  return author;
+}
+
+export function authorsToString(authors) {
+  if (Array.isArray(authors)) {
+    return data.citation.authors.map(authorToString).join("; ");
+  }
+  return authors ?? "unknown";
+}
+
 export function processEXIFToolDate(str) {
   const words = str.split(" ");
   words[0] = words[0].replace(/:/g, "-");
@@ -47,7 +72,7 @@ function capitalizeFirstLetter(string) {
 }
 
 export function removeTitleParts(title, opts) {
-  opts = opts ?? {}
+  opts = opts ?? {};
   let words = opts.words ?? [];
   words = words.concat(words.map(capitalizeFirstLetter));
   let prefixes = opts.prefixes ?? [];
