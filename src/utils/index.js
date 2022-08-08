@@ -22,7 +22,7 @@ function authorToString(author) {
 
 export function authorsToString(authors) {
   if (Array.isArray(authors)) {
-    return data.citation.authors.map(authorToString).join("; ");
+    return authors.map(authorToString).join("; ");
   }
   return authors ?? "unknown";
 }
@@ -90,13 +90,13 @@ export function removeTitleParts(title, opts) {
       return word;
     })
     .join(" ");
-  const chars = opts.chararacters ?? "";
+  const chars = opts.characters ?? "";
   for (let i = 0; i < chars.length; i++) {
     const char = chars.charAt(i);
-    title.replaceAll(char, "");
+    title = title.replaceAll(char, "");
   }
   if (opts.accents) {
-    titlePart = accents.remove(titlePart);
+    title = accents.remove(title);
   }
   return title;
 }

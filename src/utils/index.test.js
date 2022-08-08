@@ -1,11 +1,16 @@
-import { processEXIFToolDate, sdrPath, argsSub, removeTitleParts } from "./index.js";
+import {
+  processEXIFToolDate,
+  sdrPath,
+  argsSub,
+  removeTitleParts,
+} from "./index.js";
 
 test('subsitute "{}" with arg', () => {
-  expect(argsSub(['a', '{}', 'c'], 'b')).toEqual(['a', 'b', 'c']);
+  expect(argsSub(["a", "{}", "c"], "b")).toEqual(["a", "b", "c"]);
 });
 
 test('add arg when ther is no "{}" in args', () => {
-  expect(argsSub(['a', 'b'], 'c')).toEqual(['a', 'b', 'c']);
+  expect(argsSub(["a", "b"], "c")).toEqual(["a", "b", "c"]);
 });
 
 test("properly format date", () => {
@@ -19,10 +24,19 @@ test("properly create sdr name", () => {
 });
 
 test("remove unwanted words from title", () => {
-  expect(removeTitleParts("The  green a tomatoe", { words: ["the", "a"] })).toBe(
-    "green tomatoe"
-  );
-  expect(removeTitleParts("D'amour et d'eau fraîche", { prefixes: ["d'"] })).toBe(
-    "amour et eau fraîche"
-  );
+  expect(
+    removeTitleParts("The  green a tomatoe", { words: ["the", "a"] })
+  ).toBe("green tomatoe");
+  expect(
+    removeTitleParts("D'amour et d'eau fraîche", { prefixes: ["d'"] })
+  ).toBe("amour et eau fraîche");
+});
+
+test("remove unwanted chars from title", () => {
+  expect(removeTitleParts("a: b", { characters: ":" })).toBe("a b");
+  expect(removeTitleParts("a? b", { characters: "?" })).toBe("a b");
+});
+
+test("remove accents from title", () => {
+  expect(removeTitleParts("école", { accents: true })).toBe("ecole");
 });
