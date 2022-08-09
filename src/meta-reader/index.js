@@ -173,7 +173,7 @@ for (const field of [
   registerRule("citation_" + field, field);
 }
 
-export async function parseTree(raw) {
+export function parseTree(raw) {
   const ast = parse(raw);
   const tree = fromParse5(ast);
   return tree;
@@ -229,6 +229,7 @@ export async function mkEpub(data, destDir) {
     // TODO: have includes and excludes as independant parameters
     dest = path.resolve(destDir, dest);
     console.log("creating " + dest);
+    console.log(tree, meta);
     await mkEpubRaw(tree, meta, dest);
   } else {
     dest = path.resolve(destDir, dest);
