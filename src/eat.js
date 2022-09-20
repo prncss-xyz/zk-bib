@@ -129,7 +129,10 @@ function join(as) {
 }
 
 function processAuthor(author) {
-  if (!author) return;
+  if (!author)
+    return {
+      family: "unknown",
+    };
   if (author.indexOf(",") !== -1) {
     const parts = author.split(",");
     const family = parts[0].trim();

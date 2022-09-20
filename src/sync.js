@@ -29,12 +29,17 @@ export default async function sync(options) {
         "{{abs-path}}",
         config.noteDir,
       ]);
-      for (const filePath of res.split("\n")) {
+      const filePaths = res.split("\n");
+      for (const filePath of filePaths) {
         if (filePath === "") continue;
         try {
           const raw = await fs.readFile(filePath, "utf-8");
           const data = matter(raw).data;
           let dest = data.asset;
+          if (!data.asset) {
+            console.error(`note '${filePath}' does not have an asset.`);
+            continue;
+          }
           const ext = path.extname(dest);
           if (ext === ".html" || ext === ".ext") {
             dest = path.basename(dest, ext) + ".epub";
@@ -43,8 +48,8 @@ export default async function sync(options) {
           plan[dest].to_ = path.resolve(process.env.HOME, dir);
           plan[dest].data = data;
         } catch (err) {
-          if (error.code !== "ENOENT") throw error;
-          console.error(`file ${filePath} not available`)
+          if (err.code !== "ENOENT") throw err;
+          console.error(`file '${filePath}' not available`);
         }
       }
     }
