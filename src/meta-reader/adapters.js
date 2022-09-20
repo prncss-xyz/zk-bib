@@ -166,7 +166,7 @@ export function getAdapter(urlOrKey) {
   if (!urlOrKey) return {};
   let hostname;
   try {
-    const url = new URL(url);
+    const url = new URL(urlOrKey);
     hostname = url.hostname;
   } catch (err) {}
   if (hostname) {

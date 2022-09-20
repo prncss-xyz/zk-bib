@@ -11,7 +11,6 @@ import { processEXIFToolDate, removeTitleParts } from "./utils/index.js";
 import { EPUBreadMeta } from "./utils/epub-meta.js";
 import config from "./utils/config.js";
 import { getMeta } from "./meta-reader/index.js";
-import { title } from "node:process";
 
 const idLength = 5;
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz", idLength);
