@@ -88,7 +88,14 @@ export default async function sync(options) {
           }
         } else if (to_) {
           if (options.dryRun) console.log("mk", path.join(to_, filename));
-          else await mkEpub(data, to_);
+          else {
+            try {
+              await mkEpub(data, to_);
+            } catch (err) {
+              console.error(`Error while creating ${filename}.`);
+              console.error(err);
+            }
+          }
         } else {
           assert(false);
         }
