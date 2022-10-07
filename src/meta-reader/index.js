@@ -107,16 +107,19 @@ function readMeta(tree) {
   }
   if (citation.URL) {
     let { hostname } = new URL(citation.URL);
-    const ndx0 = hostname?.indexOf(".lib-ezproxy");
-    if (ndx0 > -1) {
-      hostname = citation.hostname.slice(0, ndx0);
-      hostname = hostname.replace(/-/gu, ".");
-      const URL = new URL(citation.URL);
-      citation.URL = URL.toString();
-    }
-    if (hostname.startsWith("www.")) hostname = hostname.slice(4);
-    if (!citation.language && hostname[3] === ".") {
-      citation.language = hostname.slice(0, 2);
+    if (hostname) {
+      const ndx0 = hostname.indexOf(".lib-ezproxy");
+      if (ndx0 > -1) {
+        hostname = hostname.slice(0, ndx0);
+        hostname = hostname.replace(/-/gu, ".");
+        const url = new URL(citation.URL);
+        citation.URL = url.toString();
+      }
+      if (hostname.startsWith("www.")) hostname = hostname.slice(4);
+      if (!citation.language && hostname[3] === ".") {
+        citation.language = hostname.slice(0, 2);
+      }
+      citation.hostname = hostname;
     }
   }
   citation.language ??= "en";
