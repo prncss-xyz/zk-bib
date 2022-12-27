@@ -269,7 +269,7 @@ export default async function eat(filename, options) {
     await fs.rename(filename, path.resolve(ZKDir, destAssetDir, destAsset));
     await fs.writeFile(path.resolve(ZKDir, config.noteDir, destNote), rawOut);
     if (options.edit) {
-      await edit(path.resolve(ZKDir, config.noteDir, destNote));
+      await edit_blocking(path.resolve(ZKDir, config.noteDir, destNote));
     }
   }
 }

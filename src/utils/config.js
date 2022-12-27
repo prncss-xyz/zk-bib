@@ -27,4 +27,10 @@ async function getConf() {
 
 const conf = await getConf();
 
+export function sourceFile(id) {
+  const ZKDir = process.env.ZK_NOTEBOOK_DIR;
+  const filePath = path.resolve(ZKDir, conf.noteDir, id);
+  return filePath;
+}
+
 export default conf;
